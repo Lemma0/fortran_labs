@@ -1,0 +1,81 @@
+   ! Сортировка списка класса по среднему баллу.
+   pure subroutine Sort_class_list(Surnames, Initials, Marks, Aver_Marks)
+      character(kind=CH_)  Surnames(:, :), Initials(:, :)
+      integer              Marks(:, :)
+      real(R_)             Aver_Marks(:)
+      intent (inout)       Surnames, Initials, Marks, Aver_Marks
+
+      integer              i, j
+      
+      ! Сортировка списка класса по среднему баллу методом пузырька.
+      do i = Size(Aver_Marks), 2, -1
+         ! Просматриваем список с начала, ставя в конец менее успешного.
+         do j = 1, i-1
+            ! Проверка на то, стоит ли менять учащихся местами.
+            if (Swap(Aver_Marks, Surnames, Initials, j)) &
+               call Swap_from_current(Surnames, Initials, Marks, Aver_Marks, j)
+         end do
+      end do
+   end subroutine Sort_class_list
+      
+   ! Проверка того, стоит ли менять местами текущего учащегося со следующим.
+   pure logical function Swap(Aver_Marks, Surnames, Initials, j)
+      character(kind=CH_)  Surnames(:, :), Initials(:, :)
+      real(R_)             Aver_Marks(:)
+      integer              j
+      intent (in) :: Surnames, Initials, Aver_Marks, j
+
+      Swap = .false.
+      if (Aver_Marks(j) < Aver_Marks(j+1)) then
+         Swap = .true.
+      else if (Aver_Marks(j) == Aver_Marks(j+1)) then
+         if (GT(Surnames(j, :), Surnames(j+1, :))) then
+            Swap = .true.
+         else if (All(Surnames(j, :) == Surnames(j+1, :)) .and. GT(Initials(j, :), Initials(j+1, :))) then
+            Swap = .true.
+         end if
+      end if
+   end function Swap
+   
+   ! Функция операции > для массивов символов.
+   pure logical function GT(arr1, arr2)
+      character(kind=CH_), intent(in) :: arr1(:), arr2(:)
+
+      integer :: i 
+
+      ! Поиск первого отличного символа или остановка на последнем символе.
+      do i = 1, Min(Size(arr1), Size(arr2)) - 1
+         if (arr1(i) /= arr2(i)) &
+            exit
+      end do
+      GT = arr1(i) > arr2(i)  
+   end function GT
+   
+   ! Перестановка местами двух эелементов списка, начиная с текущего.
+   pure subroutine Swap_from_current(Surnames, Initials, Marks, Aver_Marks, j)
+      character(kind=CH_)     Surnames(:, :), Initials(:, :)
+      integer                 Marks(:, :)
+      real(R_)                Aver_Marks(:)
+      integer, intent(in)  :: j
+      intent (inout)       :: Surnames, Initials, Marks, Aver_Marks
+      
+      character(kind=CH_)  tmpSurname(SURNAME_LEN), tmpInitials(INITIALS_LEN)
+      integer              tmpMarks(MARKS_AMOUNT)
+      real(R_)             tmpAverMark
+
+      tmpSurname = Surnames(j+1, :)
+      Surnames(j+1, :) = Surnames(j, :)
+      Surnames(j, :) = tmpSurname
+
+      tmpInitials = Initials(j+1, :)
+      Initials(j+1, :) = Initials(j, :)
+      Initials(j, :) = tmpInitials
+
+      tmpMarks = Marks(j+1, :)
+      Marks(j+1, :) = Marks(j, :)
+      Marks(j, :) = tmpMarks
+
+      tmpAverMark = Aver_Marks(j+1)
+      Aver_Marks(j+1) = Aver_Marks(j)
+      Aver_Marks(j) = tmpAverMark
+   end subroutine Swap_from_current
